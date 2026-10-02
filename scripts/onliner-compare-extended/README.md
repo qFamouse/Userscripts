@@ -1,6 +1,6 @@
 # Onliner Compare Extended
 
-![Onliner Compare Extended](https://gist.github.com/user-attachments/assets/2c691a24-e8cd-4e09-850b-52ae89f0182a)
+![Onliner Compare Extended](https://github.com/user-attachments/assets/cadfc57d-54ba-47d6-be70-a3c26fd9e75b)
 
 Расширяет таблицу сравнения на [catalog.onliner.by](https://catalog.onliner.by/compare/) — убирает ограничения по ширине и позволяет скопировать всю таблицу в CSV с гибкими настройками экспорта.
 
