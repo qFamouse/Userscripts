@@ -1,6 +1,6 @@
 # Ozon Copy Data
 
-![Ozon Copy Data](https://gist.github.com/user-attachments/assets/cf3fbdba-113d-4ba1-941f-c043d284fb08)
+![Ozon Copy Data](https://github.com/user-attachments/assets/3e3e3e91-4f0b-4662-898b-e023bb09cb8b)
 
 Копирует данные с карточки товара на [ozon.ru](https://ozon.ru/product/) — название, артикул, цену, состав, характеристики и другие поля. Поддерживает накопительный буфер для сбора нескольких товаров сразу.
 
