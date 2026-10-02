@@ -4,4 +4,4 @@
 
 Копирует данные с карточки товара на [ozon.ru](https://ozon.ru/product/) — название, артикул, цену, состав, характеристики и другие поля. Поддерживает накопительный буфер для сбора нескольких товаров сразу.
 
-[![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://github.com/qFamouse/Userscripts/raw/main/scripts/ozon-copy-data/ozon-copy-data.user.js)
+[![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/ozon-copy-data/ozon-copy-data.user.js)

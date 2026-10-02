@@ -10,10 +10,10 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=onliner.by
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @homepageURL  https://github.com/qFamouse/Userscripts/tree/main/scripts/onliner-compare-extended
+// @homepageURL  https://github.com/qFamouse/Userscripts/tree/master/scripts/onliner-compare-extended
 // @supportURL   https://github.com/qFamouse/Userscripts/issues
-// @updateURL    https://github.com/qFamouse/Userscripts/raw/main/scripts/onliner-compare-extended/onliner-compare-extended.user.js
-// @downloadURL  https://github.com/qFamouse/Userscripts/raw/main/scripts/onliner-compare-extended/onliner-compare-extended.user.js
+// @updateURL    https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/onliner-compare-extended/onliner-compare-extended.user.js
+// @downloadURL  https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/onliner-compare-extended/onliner-compare-extended.user.js
 // ==/UserScript==
 (function () {
     'use strict';

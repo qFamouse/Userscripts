@@ -9,10 +9,10 @@
 // @match        https://tabletka.by/result/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=tabletka.by
 // @grant        none
-// @homepageURL  https://github.com/qFamouse/Userscripts/tree/main/scripts/tabletka-price-filter
+// @homepageURL  https://github.com/qFamouse/Userscripts/tree/master/scripts/tabletka-price-filter
 // @supportURL   https://github.com/qFamouse/Userscripts/issues
-// @updateURL    https://github.com/qFamouse/Userscripts/raw/main/scripts/tabletka-price-filter/tabletka-price-filter.user.js
-// @downloadURL  https://github.com/qFamouse/Userscripts/raw/main/scripts/tabletka-price-filter/tabletka-price-filter.user.js
+// @updateURL    https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/tabletka-price-filter/tabletka-price-filter.user.js
+// @downloadURL  https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/tabletka-price-filter/tabletka-price-filter.user.js
 // ==/UserScript==
 
 (function () {

@@ -18,10 +18,10 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
-// @homepageURL  https://github.com/qFamouse/Userscripts/tree/main/scripts/ozon-copy-data
+// @homepageURL  https://github.com/qFamouse/Userscripts/tree/master/scripts/ozon-copy-data
 // @supportURL   https://github.com/qFamouse/Userscripts/issues
-// @updateURL    https://github.com/qFamouse/Userscripts/raw/main/scripts/ozon-copy-data/ozon-copy-data.user.js
-// @downloadURL  https://github.com/qFamouse/Userscripts/raw/main/scripts/ozon-copy-data/ozon-copy-data.user.js
+// @updateURL    https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/ozon-copy-data/ozon-copy-data.user.js
+// @downloadURL  https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/ozon-copy-data/ozon-copy-data.user.js
 // ==/UserScript==
 
 (function() {

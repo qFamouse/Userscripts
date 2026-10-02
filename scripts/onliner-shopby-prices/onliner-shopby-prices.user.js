@@ -13,10 +13,10 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @connect      shop.by
-// @homepageURL  https://github.com/qFamouse/Userscripts/tree/main/scripts/onliner-shopby-prices
+// @homepageURL  https://github.com/qFamouse/Userscripts/tree/master/scripts/onliner-shopby-prices
 // @supportURL   https://github.com/qFamouse/Userscripts/issues
-// @updateURL    https://github.com/qFamouse/Userscripts/raw/main/scripts/onliner-shopby-prices/onliner-shopby-prices.user.js
-// @downloadURL  https://github.com/qFamouse/Userscripts/raw/main/scripts/onliner-shopby-prices/onliner-shopby-prices.user.js
+// @updateURL    https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/onliner-shopby-prices/onliner-shopby-prices.user.js
+// @downloadURL  https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/onliner-shopby-prices/onliner-shopby-prices.user.js
 // ==/UserScript==
 
 (function() {

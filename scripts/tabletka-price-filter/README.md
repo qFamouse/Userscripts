@@ -4,4 +4,4 @@
 
 Скрипт для [tabletka.by](https://tabletka.by) — добавляет фильтр по цене в блок «Диапазон цен»: поля «от» и «до» с кнопкой **мин** для быстрой подстановки минимальной цены. Фильтрует одновременно таблицу аптек и маркеры на карте.
 
-[![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://github.com/qFamouse/Userscripts/raw/main/scripts/tabletka-price-filter/tabletka-price-filter.user.js)
+[![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/tabletka-price-filter/tabletka-price-filter.user.js)
