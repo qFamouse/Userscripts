@@ -1,6 +1,5 @@
 # Habr Promo Cleaner
-
-<!-- ![Habr Promo Cleaner](https://github.com/user-attachments/assets/...) -->
+![Habr Promo Cleaner](https://github.com/user-attachments/assets/34f470d6-0008-4978-a828-08f93f468673)
 
 Убирает рекламу и кросс-промо блоки на [promo.habr.com](https://promo.habr.com) (чужие офферы среди промокодов) и красит кнопку «Показать промокод» в зелёный цвет. Работает и с динамически подгружаемыми промокодами.
 
