@@ -12,6 +12,7 @@
 | [GoldApple Copy Data](scripts/goldapple-copy-data) | Копирование данных карточки товара на goldapple.by / goldapple.ru с накопительным буфером | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/goldapple-copy-data/goldapple-copy-data.user.js) |
 | [Habr Promo Cleaner](scripts/habr-promo-cleaner) | Убирает рекламу на promo.habr.com и красит кнопку «Показать промокод» в зелёный | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/habr-promo-cleaner/habr-promo-cleaner.user.js) |
 | [Steam Workshop Copy ID](scripts/steam-workshop-copy-id) | Копирование ID одного или нескольких модов в Мастерской Steam: чипы на карточках, множественный выбор, плавающая панель | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/steam-workshop-copy-id/steam-workshop-copy-id.user.js) |
+| [ChatGPT Copy Tokens](scripts/chatgpt-copy-tokens) | Кнопки копирования accessToken и sessionToken на chatgpt.com | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/chatgpt-copy-tokens/chatgpt-copy-tokens.user.js) |
 
 ## Лицензия
 
