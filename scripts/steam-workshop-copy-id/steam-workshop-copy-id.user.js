@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name           Steam Workshop Copy ID
 // @namespace      https://github.com/qFamouse/
-// @version        2.0
-// @description    Copy Steam Workshop item IDs: one-click chip on every card, multi-select with a floating panel (kept between pages), custom separator
-// @description:ru Копирование ID предметов Мастерской Steam: чип на каждой карточке, множественный выбор с плавающей панелью (сохраняется между страницами), выбор разделителя
+// @version        2.1
+// @description    Copy Steam Workshop item IDs: one-click chip on every card, multi-select with a floating panel (kept between pages), custom separator, collections support (copy IDs of all mods inside a collection)
+// @description:ru Копирование ID предметов Мастерской Steam: чип на каждой карточке, множественный выбор с плавающей панелью (сохраняется между страницами), выбор разделителя, поддержка коллекций (ID всех модов внутри коллекции)
 // @author         Famouse
 // @license        MIT
 // @match          https://steamcommunity.com/app/*/workshop/*
@@ -22,6 +22,10 @@
 
     const STORE_KEY = 'swci:selection';
     const FORMAT_KEY = 'swci:format';
+    const COLLECTIONS_KEY = 'swci:collections'; // кэш: id коллекции -> { t, ids }
+    const COLLECTIONS_TTL = 6 * 60 * 60 * 1000;  // 6 часов
+    const COLLECTIONS_MAX = 80;                  // сколько коллекций держим в кэше
+    const FETCH_CONCURRENCY = 3;
     const ID_RE = /[?&]id=(\d+)/;
 
     const FORMATS = {
@@ -32,13 +36,17 @@
 
     const ICON_COPY = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 3.5v-.3A1.2 1.2 0 0 0 9.3 2H3.7A1.2 1.2 0 0 0 2.5 3.2v5.6A1.2 1.2 0 0 0 3.7 10h.3"/></svg>';
     const ICON_CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 8.6l3.1 3.1 6.5-7"/></svg>';
+    const ICON_LIST = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 4h7.5M6 8h7.5M6 12h7.5M2.5 4h.01M2.5 8h.01M2.5 12h.01"/></svg>';
 
     // ─── Состояние (хранится в localStorage, синхронизируется между вкладками) ─
+    // В выборе лежат токены: "123" — обычный предмет, "c123" — коллекция.
+    // Коллекция разворачивается в ID её модов только при копировании/подсчёте,
+    // поэтому пересечения между коллекциями дедуплицируются автоматически.
 
     function loadSelection() {
         try {
             const arr = JSON.parse(localStorage.getItem(STORE_KEY));
-            return Array.isArray(arr) ? arr.filter(x => /^\d+$/.test(x)) : [];
+            return Array.isArray(arr) ? arr.filter(x => /^c?\d+$/.test(x)) : [];
         } catch { return []; }
     }
 
@@ -49,15 +57,38 @@
         } catch { return 'lines'; }
     }
 
+    function loadCollectionsCache() {
+        try {
+            const raw = JSON.parse(localStorage.getItem(COLLECTIONS_KEY)) || {};
+            const now = Date.now();
+            const fresh = {};
+            for (const [id, v] of Object.entries(raw)) {
+                if (/^\d+$/.test(id) && v && Array.isArray(v.ids) && now - v.t < COLLECTIONS_TTL) fresh[id] = v;
+            }
+            return fresh;
+        } catch { return {}; }
+    }
+
     let selected = new Set(loadSelection());
     let format = loadFormat();
     let lastIndex = -1; // для выбора диапазона по Shift
+    let colCache = loadCollectionsCache();
+    const inflight = new Map(); // id коллекции -> Promise
+    const failed = new Set();   // коллекции, которые не удалось загрузить
 
     function persist() {
         try {
             localStorage.setItem(STORE_KEY, JSON.stringify([...selected]));
             localStorage.setItem(FORMAT_KEY, format);
         } catch { /* хранилище недоступно — работаем без сохранения */ }
+    }
+
+    function persistCollections() {
+        try {
+            const entries = Object.entries(colCache).sort((a, b) => b[1].t - a[1].t).slice(0, COLLECTIONS_MAX);
+            colCache = Object.fromEntries(entries);
+            localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(colCache));
+        } catch { /* не критично — кэш останется в памяти */ }
     }
 
     // ─── Стили ────────────────────────────────────────────────────────────────
@@ -88,6 +119,8 @@
             background: linear-gradient(to right, #47bfff 5%, #1a44c2 60%);
         }
 
+        .swci-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 2px; }
+
         .swci-id, .swci-btn {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 0 10px; border: 0; border-radius: 2px; cursor: pointer;
@@ -96,7 +129,7 @@
             color: #67c1f5; background: rgba(103,193,245,.18);
             transition: color .15s, background .15s;
         }
-        .swci-id { margin: 6px 0 2px; line-height: 22px; }
+        .swci-id { margin: 0; line-height: 22px; }
         .swci-btn { line-height: 28px; }
         .swci-id svg { width: 11px; height: 11px; opacity: .85; }
         .swci-id:hover:not([data-flash]), .swci-btn:hover:not(:disabled):not([data-flash]) {
@@ -105,6 +138,7 @@
         .swci-btn:disabled { opacity: .4; cursor: default; }
         .swci-id[data-flash="done"], .swci-btn[data-flash="done"] { color: #fff; background: #5ba32b; }
         .swci-id[data-flash="fail"], .swci-btn[data-flash="fail"] { color: #fff; background: #c33c3c; }
+        .swci-id[data-flash="busy"], .swci-btn[data-flash="busy"] { color: #fff; background: rgba(103,193,245,.35); cursor: progress; }
 
         .swci-panel {
             position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
@@ -118,9 +152,11 @@
         .swci-panel [hidden] { display: none !important; }
         .swci-count { min-width: 84px; padding: 0 4px; white-space: nowrap; }
         .swci-count b { color: #67c1f5; font-size: 15px; }
+        .swci-extra { margin-left: 4px; font-size: 12px; color: #8ba4b6; }
+        .swci-extra.swci-warn { color: #e0884f; }
         .swci-div { width: 1px; align-self: stretch; background: rgba(255,255,255,.1); }
         .swci-ctx { display: flex; align-items: center; gap: 8px; }
-        .swci-ctx .swci-id { margin: 0; line-height: 28px; }
+        .swci-ctx .swci-id { line-height: 28px; }
 
         .swci-seg { display: inline-flex; overflow: hidden; border-radius: 2px; background: rgba(103,193,245,.12); }
         .swci-seg button {
@@ -142,6 +178,10 @@
 
     const onDetailsPage = () => location.pathname.includes('/sharedfiles/filedetails');
     const currentItemId = () => (onDetailsPage() ? idOf(location.search) : null);
+
+    // Раздел «Коллекции» в браузере Мастерской: карточки — это коллекции, а не моды
+    const onCollectionsList = () =>
+        !onDetailsPage() && new URLSearchParams(location.search).get('section') === 'collections';
 
     async function copyToClipboard(text) {
         try {
@@ -165,15 +205,18 @@
         if (el && el.textContent !== text) el.textContent = text;
     }
 
-    function flash(btn, text, kind) {
+    // ms = 0 — состояние «busy» без таймера, снимается следующим flash()
+    function flash(btn, text, kind, ms = 1500) {
         const el = btn.querySelector('.swci-label');
         clearTimeout(btn._swciTimer);
         btn.dataset.flash = kind;
         el.textContent = text;
-        btn._swciTimer = setTimeout(() => {
-            delete btn.dataset.flash;
-            render();
-        }, 1500);
+        if (ms > 0) {
+            btn._swciTimer = setTimeout(() => {
+                delete btn.dataset.flash;
+                render();
+            }, ms);
+        }
     }
 
     async function copyWithFlash(btn, text, okText) {
@@ -184,6 +227,89 @@
             flash(btn, 'Ошибка', 'fail');
             console.error('[SteamWorkshopCopyId]', err);
         }
+    }
+
+    // ─── Коллекции ────────────────────────────────────────────────────────────
+
+    // Моды внутри коллекции: на странице коллекции каждый — блок .collectionItem
+    // с id="sharedfile_<ID>" (запасной вариант — первая ссылка на предмет внутри)
+    function parseCollectionItems(root) {
+        const ids = [];
+        root.querySelectorAll('.collectionItem').forEach(el => {
+            const id = el.id?.match(/^sharedfile_(\d+)$/)?.[1]
+                ?? idOf(el.querySelector('a[href*="filedetails/?id="]')?.getAttribute('href') ?? '');
+            if (id) ids.push(id);
+        });
+        return [...new Set(ids)];
+    }
+
+    async function fetchCollectionMods(id) {
+        const res = await fetch(`/sharedfiles/filedetails/?id=${id}`, { credentials: 'same-origin' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const ids = parseCollectionItems(doc);
+        if (!ids.length) throw new Error('в коллекции не найдено ни одного предмета');
+        return ids;
+    }
+
+    function getCollectionMods(id) {
+        if (colCache[id]) return Promise.resolve(colCache[id].ids);
+        if (!inflight.has(id)) {
+            inflight.set(id, fetchCollectionMods(id)
+                .then(ids => {
+                    colCache[id] = { t: Date.now(), ids };
+                    failed.delete(id);
+                    persistCollections();
+                    return ids;
+                })
+                .catch(err => {
+                    failed.add(id);
+                    console.error('[SteamWorkshopCopyId] коллекция', id, err);
+                    throw err;
+                })
+                .finally(() => {
+                    inflight.delete(id);
+                    render();
+                }));
+        }
+        return inflight.get(id);
+    }
+
+    // Загружает коллекции с ограничением параллелизма, возвращает число ошибок
+    async function resolveCollections(ids) {
+        const queue = [...ids];
+        let errors = 0;
+        const worker = async () => {
+            while (queue.length) {
+                try { await getCollectionMods(queue.shift()); } catch { errors++; }
+            }
+        };
+        await Promise.all(Array.from({ length: Math.min(FETCH_CONCURRENCY, queue.length) }, worker));
+        return errors;
+    }
+
+    const collectionIdsInSelection = () =>
+        [...selected].filter(t => t[0] === 'c').map(t => t.slice(1));
+
+    // Фоново подгружаем выбранные коллекции, чтобы счётчик показывал реальное число модов
+    function prefetchCollections() {
+        const todo = collectionIdsInSelection().filter(id => !colCache[id] && !failed.has(id) && !inflight.has(id));
+        if (todo.length) resolveCollections(todo);
+    }
+
+    // Выбор -> плоский список ID модов (порядок сохраняется, дубли убираются)
+    function expandSelection() {
+        const ids = new Set();
+        let collections = 0, pending = 0, errors = 0;
+        for (const token of selected) {
+            if (token[0] !== 'c') { ids.add(token); continue; }
+            collections++;
+            const id = token.slice(1);
+            if (colCache[id]) colCache[id].ids.forEach(m => ids.add(m));
+            else if (failed.has(id)) errors++;
+            else pending++;
+        }
+        return { ids: [...ids], collections, pending, errors };
     }
 
     // ─── Карточки ─────────────────────────────────────────────────────────────
@@ -200,13 +326,13 @@
         return null;
     }
 
+    const tokenOf = card => (card.dataset.swciKind === 'collection' ? 'c' : '') + card.dataset.swciId;
+
     function createCheck() {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'swci-check';
         btn.setAttribute('role', 'checkbox');
-        btn.setAttribute('aria-label', 'Выбрать предмет');
-        btn.title = 'Выбрать (Shift — выбрать диапазон)';
         btn.innerHTML = ICON_CHECK;
         btn.addEventListener('click', e => {
             e.preventDefault();
@@ -216,22 +342,83 @@
         return btn;
     }
 
-    function createChip() {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'swci-id';
-        btn.title = 'Скопировать ID предмета';
-        btn.innerHTML = ICON_COPY + '<span class="swci-label"></span>';
-        btn.addEventListener('click', e => {
+    function createChips() {
+        const wrap = document.createElement('div');
+        wrap.className = 'swci-chips';
+
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'swci-id swci-copy-id';
+        chip.innerHTML = ICON_COPY + '<span class="swci-label"></span>';
+        chip.addEventListener('click', e => {
             e.preventDefault();
             e.stopPropagation();
-            copyWithFlash(btn, btn.dataset.id, 'Скопировано');
+            copyWithFlash(chip, chip.dataset.id, 'Скопировано');
         });
-        return btn;
+        wrap.append(chip);
+        return wrap;
+    }
+
+    function createModsChip() {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'swci-id swci-mods';
+        chip.title = 'Скопировать ID всех модов этой коллекции';
+        chip.innerHTML = ICON_LIST + '<span class="swci-label">Моды</span>';
+        chip.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            copyCollectionMods(chip, chip.dataset.id);
+        });
+        return chip;
+    }
+
+    async function copyCollectionMods(btn, id) {
+        if (btn.dataset.flash === 'busy') return;
+        flash(btn, 'Загрузка…', 'busy', 0);
+        try {
+            const ids = await getCollectionMods(id);
+            await copyToClipboard(ids.join(FORMATS[format].sep));
+            flash(btn, `Скопировано: ${ids.length}`, 'done');
+        } catch (err) {
+            flash(btn, 'Ошибка', 'fail');
+            console.error('[SteamWorkshopCopyId]', err);
+        }
+    }
+
+    // Чипы карточки зависят от её типа: у коллекции дополнительно есть кнопка «Моды»
+    function syncChips(chips, kind, id) {
+        const idChip = chips.querySelector('.swci-copy-id');
+        idChip.dataset.id = id;
+        idChip.title = kind === 'collection' ? 'Скопировать ID коллекции' : 'Скопировать ID предмета';
+
+        let mods = chips.querySelector('.swci-mods');
+        if (kind === 'collection') {
+            if (!mods) chips.append(mods = createModsChip());
+            mods.dataset.id = id;
+        } else {
+            mods?.remove();
+        }
+    }
+
+    function prepareCard(card, id, kind) {
+        card.classList.add('swci-card');
+        card.dataset.swciId = id; // React может переиспользовать узел для другого предмета
+        card.dataset.swciKind = kind;
+
+        let check = card.querySelector(':scope > .swci-check');
+        if (!check) card.append(check = createCheck());
+        check.title = kind === 'collection'
+            ? 'Выбрать коллекцию — в список попадут все её моды (Shift — диапазон)'
+            : 'Выбрать (Shift — выбрать диапазон)';
+        check.setAttribute('aria-label', kind === 'collection' ? 'Выбрать коллекцию' : 'Выбрать предмет');
+        return check;
     }
 
     function inject() {
-        if (onDetailsPage()) return;
+        if (onDetailsPage()) return injectCollectionPage();
+
+        const kind = onCollectionsList() ? 'collection' : 'mod';
 
         document.querySelectorAll('a[href*="/sharedfiles/filedetails/?id="]').forEach(thumb => {
             if (!thumb.querySelector('img')) return; // карточку находим по ссылке-картинке
@@ -239,20 +426,35 @@
             const card = id && findCard(thumb, id);
             if (!card) return; // например, баннер без превью
 
-            card.classList.add('swci-card');
-            card.dataset.swciId = id; // React может переиспользовать узел для другого предмета
+            prepareCard(card, id, kind);
 
-            if (!card.querySelector(':scope > .swci-check')) card.append(createCheck());
-
-            let chip = card.querySelector('.swci-id');
-            if (!chip) {
-                chip = createChip();
+            let chips = card.querySelector('.swci-chips');
+            if (!chips) {
+                chips = createChips();
                 const titleBlock = titleLinkOf(card, id)?.parentElement;
                 const anchor = titleBlock?.nextElementSibling || titleBlock; // под строкой автора
-                if (anchor) anchor.after(chip);
-                else card.append(chip);
+                if (anchor) anchor.after(chips);
+                else card.append(chips);
             }
-            chip.dataset.id = id;
+            syncChips(chips, kind, id);
+        });
+    }
+
+    // Страница коллекции (старая вёрстка): моды лежат в блоках .collectionItem
+    function injectCollectionPage() {
+        document.querySelectorAll('.collectionItem').forEach(card => {
+            const id = card.id?.match(/^sharedfile_(\d+)$/)?.[1]
+                ?? idOf(card.querySelector('a[href*="filedetails/?id="]')?.getAttribute('href') ?? '');
+            if (!id) return;
+
+            prepareCard(card, id, 'mod');
+
+            let chips = card.querySelector('.swci-chips');
+            if (!chips) {
+                chips = createChips();
+                (card.querySelector('.collectionItemDetails') ?? card).append(chips);
+            }
+            syncChips(chips, 'mod', id);
         });
     }
 
@@ -260,20 +462,20 @@
 
     const allCards = () => [...document.querySelectorAll('.swci-card')];
 
-    function setSelected(id, on) {
-        if (on) selected.add(id); else selected.delete(id);
+    function setSelected(token, on) {
+        if (on) selected.add(token); else selected.delete(token);
     }
 
     function onCheckClick(card, shift) {
         const cards = allCards();
         const index = cards.indexOf(card);
-        const on = !selected.has(card.dataset.swciId);
+        const on = !selected.has(tokenOf(card));
 
         if (shift && lastIndex >= 0 && lastIndex < cards.length) {
             const [from, to] = index < lastIndex ? [index, lastIndex] : [lastIndex, index];
-            for (let i = from; i <= to; i++) setSelected(cards[i].dataset.swciId, on);
+            for (let i = from; i <= to; i++) setSelected(tokenOf(cards[i]), on);
         } else {
-            setSelected(card.dataset.swciId, on);
+            setSelected(tokenOf(card), on);
         }
         lastIndex = index;
         commit();
@@ -281,7 +483,33 @@
 
     function commit() {
         persist();
+        prefetchCollections();
         render();
+    }
+
+    async function copySelection(btn) {
+        if (btn.dataset.flash === 'busy') return;
+
+        const missing = collectionIdsInSelection().filter(id => !colCache[id]);
+        let loadErrors = 0;
+        if (missing.length) {
+            flash(btn, `Загрузка коллекций: ${missing.length}…`, 'busy', 0);
+            loadErrors = await resolveCollections(missing);
+        }
+
+        const { ids } = expandSelection();
+        if (!ids.length) {
+            flash(btn, 'Ошибка', 'fail');
+            return;
+        }
+        try {
+            await copyToClipboard(ids.join(FORMATS[format].sep));
+            flash(btn, loadErrors ? `Скопировано: ${ids.length}, ошибок: ${loadErrors}` : `Скопировано: ${ids.length}`,
+                loadErrors ? 'fail' : 'done');
+        } catch (err) {
+            flash(btn, 'Ошибка', 'fail');
+            console.error('[SteamWorkshopCopyId]', err);
+        }
     }
 
     // ─── Панель ───────────────────────────────────────────────────────────────
@@ -292,11 +520,12 @@
     panel.setAttribute('aria-label', 'Копирование ID мастерской');
     panel.innerHTML = `
         <div class="swci-ctx" data-ref="ctx" hidden>
-            <button type="button" class="swci-id" data-act="copy-this" title="Скопировать ID этого предмета">${ICON_COPY}<span class="swci-label"></span></button>
+            <button type="button" class="swci-id" data-act="copy-this">${ICON_COPY}<span class="swci-label"></span></button>
             <button type="button" class="swci-btn" data-act="toggle-this"><span class="swci-label"></span></button>
+            <button type="button" class="swci-btn" data-act="copy-mods" title="Скопировать ID всех модов коллекции"><span class="swci-label"></span></button>
         </div>
         <div class="swci-div" data-ref="ctx-div" hidden></div>
-        <div class="swci-count">Выбрано: <b data-ref="count">0</b></div>
+        <div class="swci-count">Выбрано: <b data-ref="count">0</b><span class="swci-extra" data-ref="extra" hidden></span></div>
         <button type="button" class="swci-btn" data-act="page"><span class="swci-label"></span></button>
         <button type="button" class="swci-btn" data-act="clear"><span class="swci-label">Сбросить</span></button>
         <div class="swci-div"></div>
@@ -322,7 +551,7 @@
 
         switch (btn.dataset.act) {
             case 'copy':
-                copyWithFlash(btn, [...selected].join(FORMATS[format].sep), `Скопировано: ${selected.size}`);
+                copySelection(btn);
                 break;
             case 'clear':
                 selected.clear();
@@ -330,15 +559,20 @@
                 commit();
                 break;
             case 'page': {
-                const ids = allCards().map(c => c.dataset.swciId);
-                const everySelected = ids.every(id => selected.has(id));
-                ids.forEach(id => setSelected(id, !everySelected));
+                const tokens = allCards().map(tokenOf);
+                const everySelected = tokens.every(t => selected.has(t));
+                tokens.forEach(t => setSelected(t, !everySelected));
                 commit();
                 break;
             }
             case 'copy-this':
                 copyWithFlash(btn, currentItemId(), 'Скопировано');
                 break;
+            case 'copy-mods': {
+                const ids = allCards().map(c => c.dataset.swciId);
+                copyWithFlash(btn, ids.join(FORMATS[format].sep), `Скопировано: ${ids.length}`);
+                break;
+            }
             case 'toggle-this': {
                 const id = currentItemId();
                 setSelected(id, !selected.has(id));
@@ -349,13 +583,12 @@
     });
 
     function render() {
-        const n = selected.size;
-        document.body.classList.toggle('swci-has-selection', n > 0);
+        document.body.classList.toggle('swci-has-selection', selected.size > 0);
 
         const cards = allCards();
         cards.forEach(card => {
             const id = card.dataset.swciId;
-            const on = selected.has(id);
+            const on = selected.has(tokenOf(card));
             card.classList.toggle('swci-selected', on);
 
             const check = card.querySelector(':scope > .swci-check');
@@ -363,32 +596,57 @@
                 check.classList.toggle('swci-on', on);
                 check.setAttribute('aria-checked', String(on));
             }
-            const chip = card.querySelector('.swci-id');
+            const chip = card.querySelector('.swci-copy-id');
             if (chip) setLabel(chip, 'ID ' + id);
+
+            const mods = card.querySelector('.swci-mods');
+            if (mods) setLabel(mods, colCache[id] ? `Моды (${colCache[id].ids.length})` : 'Моды');
         });
 
-        // Контекст страницы предмета: ID текущего мода и кнопка «в список»
+        // Контекст страницы предмета / коллекции
         const current = currentItemId();
+        const inCollection = !!current && cards.length > 0;
         ref('ctx').hidden = !current;
         ref('ctx-div').hidden = !current;
         if (current) {
-            setLabel(act('copy-this'), 'ID ' + current);
-            setLabel(act('toggle-this'), selected.has(current) ? 'Убрать из списка' : 'В список');
+            const copyThis = act('copy-this');
+            copyThis.title = inCollection ? 'Скопировать ID коллекции' : 'Скопировать ID этого предмета';
+            setLabel(copyThis, (inCollection ? 'Коллекция ' : 'ID ') + current);
+
+            const toggle = act('toggle-this');
+            toggle.hidden = inCollection;
+            if (!inCollection) setLabel(toggle, selected.has(current) ? 'Убрать из списка' : 'В список');
+
+            const mods = act('copy-mods');
+            mods.hidden = !inCollection;
+            if (inCollection) setLabel(mods, `Моды коллекции (${cards.length})`);
         }
 
-        ref('count').textContent = n;
+        // Счётчик: уникальные моды + сводка по выбранным коллекциям
+        const { ids, collections, pending, errors } = expandSelection();
+        ref('count').textContent = ids.length;
+        const extra = ref('extra');
+        extra.hidden = collections === 0;
+        if (collections) {
+            const parts = [`коллекций: ${collections}`];
+            if (pending) parts.push('загрузка…');
+            if (errors) parts.push(`ошибок: ${errors}`);
+            const text = `(${parts.join(', ')})`;
+            if (extra.textContent !== text) extra.textContent = text;
+            extra.classList.toggle('swci-warn', errors > 0);
+        }
 
         const pageBtn = act('page');
-        const everySelected = cards.length > 0 && cards.every(c => selected.has(c.dataset.swciId));
-        pageBtn.hidden = !!current;
+        const everySelected = cards.length > 0 && cards.every(c => selected.has(tokenOf(c)));
+        pageBtn.hidden = !!current && !inCollection;
         pageBtn.disabled = cards.length === 0;
         setLabel(pageBtn, everySelected ? 'Снять со страницы' : 'Все на странице');
 
-        act('clear').disabled = n === 0;
+        act('clear').disabled = selected.size === 0;
 
         const copyBtn = act('copy');
-        copyBtn.disabled = n === 0;
-        setLabel(copyBtn, n ? `Копировать ID (${n})` : 'Копировать ID');
+        copyBtn.disabled = selected.size === 0;
+        setLabel(copyBtn, ids.length ? `Копировать ID (${ids.length})` : 'Копировать ID');
 
         panel.querySelectorAll('[data-fmt]').forEach(b =>
             b.classList.toggle('swci-active', b.dataset.fmt === format));
@@ -401,7 +659,7 @@
         // Собственные изменения (подписи кнопок, вставка контролов) игнорируем
         const external = mutations.some(m => {
             const el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
-            return !el?.closest('.swci-panel, .swci-id, .swci-check');
+            return !el?.closest('.swci-panel, .swci-chips, .swci-id, .swci-check');
         });
         if (!external || scheduled) return;
         scheduled = true;
@@ -413,10 +671,12 @@
         if (e.key !== STORE_KEY && e.key !== FORMAT_KEY) return;
         selected = new Set(loadSelection());
         format = loadFormat();
+        prefetchCollections();
         render();
     });
 
     document.body.appendChild(panel);
     inject();
+    prefetchCollections();
     render();
 })();
