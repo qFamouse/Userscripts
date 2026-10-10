@@ -2,6 +2,6 @@
 
 ![GoldApple Copy Data](https://github.com/user-attachments/assets/ce7fc07f-9f10-434a-96c1-7ea3225dfe15)
 
-Копирует данные с карточки товара на [goldapple.by](https://goldapple.by) и [goldapple.ru](https://goldapple.ru) — название, артикул, бренд, категорию, цену (в том числе по карте), рейтинг, описание, применение, состав и дополнительную информацию. Поддерживает накопительный буфер для сбора нескольких товаров сразу.
+Копирует данные с карточки товара на [goldapple.by](https://goldapple.by) и [goldapple.ru](https://goldapple.ru) — название, артикул, бренд, категорию, цену (в том числе по карте), рейтинг, описание, применение, состав и дополнительную информацию. Поддерживает накопительный буфер для сбора нескольких товаров сразу: товар можно добавить на странице товара или кнопкой «+» прямо на карточке в каталоге, не заходя в товар (повторный клик убирает его из буфера).
 
 [![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/goldapple-copy-data/goldapple-copy-data.user.js)
