@@ -13,6 +13,7 @@
 | [Habr Promo Cleaner](scripts/habr-promo-cleaner) | Убирает рекламу на promo.habr.com и красит кнопку «Показать промокод» в зелёный | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/habr-promo-cleaner/habr-promo-cleaner.user.js) |
 | [Steam Workshop Copy ID](scripts/steam-workshop-copy-id) | Копирование ID одного или нескольких модов в Мастерской Steam: чипы на карточках, множественный выбор, плавающая панель | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/steam-workshop-copy-id/steam-workshop-copy-id.user.js) |
 | [ChatGPT Copy Tokens](scripts/chatgpt-copy-tokens) | Кнопки копирования accessToken и sessionToken на chatgpt.com | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/chatgpt-copy-tokens/chatgpt-copy-tokens.user.js) |
+| [FreeTP Fast Download](scripts/freetp-fast-download) | Пропуск таймера на freetp.org и кнопка magnet рядом со скачиванием .torrent | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/freetp-fast-download/freetp-fast-download.user.js) |
 
 ## Лицензия
 
