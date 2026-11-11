@@ -1501,7 +1501,7 @@
         document.addEventListener('mouseover', scheduleLayout, { passive: true });
         document.addEventListener('mouseout', scheduleLayout, { passive: true });
 
-        // ─── Команды в меню Tampermonkey ─────────────────────────────────────
+        // ─── Команды в меню менеджера скриптов ─────────────────────────────────────
         const needProduct = fn => async () => {
             const nm = currentNm();
             if (!nm) { toast('Открой страницу товара', 'warning'); return; }

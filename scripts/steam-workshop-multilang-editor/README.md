@@ -6,4 +6,4 @@
 
 Интерфейс скрипта автоматически переключается на язык Steam: English, Русский, Українська, 简体中文, 繁體中文, 日本語, 한국어, Deutsch, Français, Español, Português (Brasil), Polski, Türkçe. Для остальных языков используется английский.
 
-[![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/steam-workshop-multilang-editor/steam-workshop-multilang-editor.user.js)
+[![Установить userscript](https://img.shields.io/badge/Userscript-Установить-00796B?style=for-the-badge&logo=javascript&logoColor=white&labelColor=212121)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/steam-workshop-multilang-editor/steam-workshop-multilang-editor.user.js)

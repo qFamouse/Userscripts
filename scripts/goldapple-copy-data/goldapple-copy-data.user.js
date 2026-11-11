@@ -1099,7 +1099,7 @@
     injectCardButtons();
     updateCounter();
 
-    // ─── Команды в меню Tampermonkey ──────────────────────────────────────────
+    // ─── Команды в меню менеджера скриптов ──────────────────────────────────────────
 
     GM_registerMenuCommand('📋 Скопировать товар', async () => {
         const product = getCurrentProduct();

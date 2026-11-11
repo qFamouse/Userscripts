@@ -4,4 +4,4 @@
 
 Копирует данные с карточки товара на [goldapple.by](https://goldapple.by) и [goldapple.ru](https://goldapple.ru) — название, артикул, бренд, категорию, цену (в том числе по карте), рейтинг, описание, применение, состав и дополнительную информацию. Поддерживает накопительный буфер для сбора нескольких товаров сразу: товар можно добавить на странице товара или кнопкой «+» прямо на карточке в каталоге, не заходя в товар (повторный клик убирает его из буфера).
 
-[![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/goldapple-copy-data/goldapple-copy-data.user.js)
+[![Установить userscript](https://img.shields.io/badge/Userscript-Установить-00796B?style=for-the-badge&logo=javascript&logoColor=white&labelColor=212121)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/goldapple-copy-data/goldapple-copy-data.user.js)

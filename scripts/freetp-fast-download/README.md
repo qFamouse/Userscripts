@@ -6,4 +6,4 @@
 
 Magnet-ссылка собирается из самого `.torrent`: скрипт скачивает файл, считает SHA-1 info-секции (info hash) и формирует `magnet:?xt=urn:btih=…&dn=…&tr=…` с трекерами раздачи. Клик по кнопке копирует magnet в буфер и открывает торрент-клиент; ссылка подгружается заранее при наведении.
 
-[![Install with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Install-brightgreen?style=for-the-badge&logo=tampermonkey)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/freetp-fast-download/freetp-fast-download.user.js)
+[![Установить userscript](https://img.shields.io/badge/Userscript-Установить-00796B?style=for-the-badge&logo=javascript&logoColor=white&labelColor=212121)](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/freetp-fast-download/freetp-fast-download.user.js)

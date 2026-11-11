@@ -1467,7 +1467,7 @@
         }, { capture: true, passive: true });
         window.addEventListener('resize', scheduleLayout);
 
-        // ─── Команды в меню Tampermonkey ─────────────────────────────────────
+        // ─── Команды в меню менеджера скриптов ─────────────────────────────────────
         const productPath = () => isProductPage() ? productPathFromHref(location.href) : null;
         const needProduct = fn => async () => {
             const p = productPath();
