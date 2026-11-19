@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Yandex Ad Blocker
 // @namespace      https://github.com/qFamouse/
-// @version        1.0.0
+// @version        1.1.0
 // @description    Hides ads and promo results in Yandex search, the "Some sites are unavailable" modal and the "Install Yandex Browser" banners
 // @description:ru Скрывает рекламу и промо-результаты в поиске Яндекса, окно «Часть сайтов недоступна» и баннеры «Установите Яндекс Браузер»
 // @author         Famouse
@@ -36,12 +36,23 @@
   // Верхнеуровневый элемент результата, в котором лежит метка.
   function resultContainer(label) {
     let li = label.closest('li');
-    if (!li) return null;
-    // Поднимаемся до самого внешнего <li> (внутри галерей бывают вложенные <li>).
-    for (let p = li.parentElement && li.parentElement.closest('li'); p; p = li.parentElement && li.parentElement.closest('li')) {
-      li = p;
+    if (li) {
+      // Поднимаемся до самого внешнего <li> (внутри галерей бывают вложенные <li>).
+      for (let p = li.parentElement && li.parentElement.closest('li'); p; p = li.parentElement && li.parentElement.closest('li')) {
+        li = p;
+      }
+      return li;
     }
-    return li;
+    // Медийный баннер (колонка справа) лежит не в <li>, а в блоке .Root.
+    let box = label.closest('.Root');
+    if (!box) return null;
+    // Заодно прячем обёртки, в которых больше ничего нет, чтобы не оставалась пустая рамка.
+    for (let i = 0; i < 3; i++) {
+      const parent = box.parentElement;
+      if (!parent || parent.childElementCount !== 1 || parent === document.body || parent.matches('main, .content')) break;
+      box = parent;
+    }
+    return box;
   }
 
   function scan(root) {
