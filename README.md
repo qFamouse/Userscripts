@@ -19,6 +19,7 @@
 | [FreeTP Fast Download](scripts/freetp-fast-download) | Пропуск таймера на freetp.org и кнопка magnet рядом со скачиванием .torrent | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/freetp-fast-download/freetp-fast-download.user.js) |
 | [Replit Hide Onboarding](scripts/replit-hide-onboarding) | Скрывает незакрываемое окно онбординга/подтверждения телефона на replit.com и разблокирует страницу | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/replit-hide-onboarding/replit-hide-onboarding.user.js) |
 | [Yandex Ad Blocker](scripts/yandex-ad-blocker) | Скрывает рекламу и «Промо» в поиске Яндекса, окно «Часть сайтов недоступна» и баннеры «Установите Яндекс Браузер» | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/yandex-ad-blocker/yandex-ad-blocker.user.js) |
+| [Ozon Orders Duplicates](scripts/ozon-orders-duplicates) | Страница «Заказы» на ozon.ru / ozon.by: объединяет одинаковые товары, сравнивает цены, подсказывает от чего отказаться и что перезаказать | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/ozon-orders-duplicates/ozon-orders-duplicates.user.js) |
 
 ## Лицензия
 
