@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Yandex Ad Blocker
 // @namespace      https://github.com/qFamouse/
-// @version        1.1.0
+// @version        1.2.0
 // @description    Hides ads and promo results in Yandex search, the "Some sites are unavailable" modal and the "Install Yandex Browser" banners
 // @description:ru Скрывает рекламу и промо-результаты в поиске Яндекса, окно «Часть сайтов недоступна» и баннеры «Установите Яндекс Браузер»
 // @author         Famouse
@@ -55,19 +55,26 @@
     return box;
   }
 
-  function scan(root) {
-    const labels = (root || document).querySelectorAll('span, div');
-    for (const el of labels) {
-      if (el.childElementCount !== 0) continue;                 // только листовые узлы
-      const text = el.textContent.trim().toLowerCase();
-      if (text.length > 40 || !AD_LABEL_RE.test(text)) continue;
-      const box = resultContainer(el);
-      if (box && !box.hasAttribute(HIDDEN_ATTR)) {
-        box.setAttribute(HIDDEN_ATTR, '1');
-        box.style.setProperty('display', 'none', 'important');
-      }
+  function checkLabel(el) {
+    if (el.childElementCount !== 0) return;                     // только листовые узлы
+    const text = el.textContent.trim().toLowerCase();
+    if (!text || text.length > 40 || !AD_LABEL_RE.test(text)) return;
+    const box = resultContainer(el);
+    if (box && !box.hasAttribute(HIDDEN_ATTR)) {
+      box.setAttribute(HIDDEN_ATTR, '1');
+      box.style.setProperty('display', 'none', 'important');
     }
   }
+
+  // Проверка только что добавленного узла (и всего, что внутри него).
+  function scanNode(node) {
+    if (node.nodeType === 3) node = node.parentElement;         // добавили текст — смотрим его элемент
+    if (!node || node.nodeType !== 1) return;
+    if (node.matches('span, div')) checkLabel(node);
+    for (const el of node.querySelectorAll('span, div')) checkLabel(el);
+  }
+
+  function scan() { scanNode(document.documentElement); }
 
   // Прямые рекламные блоки по понятным (нехешированным) классам — на всякий случай.
   const style = document.createElement('style');
@@ -96,12 +103,18 @@
 
   function run() { scan(); killDistributionModal(); }
 
-  // Выдача подгружается динамически — следим за изменениями (с дебаунсом).
-  let timer = null;
-  new MutationObserver(() => {
-    clearTimeout(timer);
-    timer = setTimeout(run, 150);
-  }).observe(document.documentElement, { childList: true, subtree: true });
+  // Реклама скрывается сразу, в момент появления в DOM: колбэк MutationObserver
+  // срабатывает до отрисовки кадра, поэтому блок не успевает мелькнуть.
+  new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      m.addedNodes.forEach(scanNode);
+      if (m.type === 'characterData') scanNode(m.target);
+    }
+    killDistributionModal();
+  }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+
+  // Подстраховка: полный проход после загрузки страницы.
   document.addEventListener('DOMContentLoaded', run);
+  window.addEventListener('load', run);
   run();
 })();
