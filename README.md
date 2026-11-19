@@ -18,6 +18,7 @@
 | [Maktun Export](scripts/maktun-export) | Экспорт коллекции монет web.maktun.com в Excel вместе с вашими фото и характеристиками из каталога | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/maktun-export/maktun-export.user.js) |
 | [FreeTP Fast Download](scripts/freetp-fast-download) | Пропуск таймера на freetp.org и кнопка magnet рядом со скачиванием .torrent | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/freetp-fast-download/freetp-fast-download.user.js) |
 | [Replit Hide Onboarding](scripts/replit-hide-onboarding) | Скрывает незакрываемое окно онбординга/подтверждения телефона на replit.com и разблокирует страницу | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/replit-hide-onboarding/replit-hide-onboarding.user.js) |
+| [Yandex Ad Blocker](scripts/yandex-ad-blocker) | Скрывает рекламу и «Промо» в поиске Яндекса, окно «Часть сайтов недоступна» и баннеры «Установите Яндекс Браузер» | [Установить](https://raw.githubusercontent.com/qFamouse/Userscripts/refs/heads/master/scripts/yandex-ad-blocker/yandex-ad-blocker.user.js) |
 
 ## Лицензия
 
